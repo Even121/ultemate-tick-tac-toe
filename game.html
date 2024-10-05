@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ultimate Tic Tac Toe</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+            margin: 0;
+        }
+
+        #game-board {
+            display: grid;
+            grid-template-columns: repeat(3, 300px);
+            grid-template-rows: repeat(3, 300px);
+            gap: 10px;
+        }
+
+        .small-board {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            border: 3px solid #333;
+            width: 300px;
+            height: 300px;
+        }
+
+        .cell {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #999;
+            font-size: 2rem;
+            cursor: pointer;
+            background-color: white;
+        }
+
+        .cell.winner {
+            background-color: #b3ffb3;
+        }
+
+        .small-board.winner {
+            background-color: #ffcccb;
+        }
+
+        #message {
+            margin: 20px;
+            font-size: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+    <h1>Ultimate Tic Tac Toe</h1>
+    <div id="message">Player X's Turn</div>
+    <div id="game-board"></div>
+
+    <script>
+        class SmallBoard {
+            constructor(boardElement, boardRow, boardCol) {
+                this.boardElement = boardElement;
+                this.board = Array(3).fill().map(() => Array(3).fill(" "));
+                this.winner = null;
+                this.boardRow = boardRow;
+                this.boardCol = boardCol;
+                this.init();
+            }
+
+            init() {
+                this.boardElement.innerHTML = "";
+                this.boardElement.className = "small-board";
+                for (let row = 0; row < 3; row++) {
+                    for (let col = 0; col < 3; col++) {
+                        const cell = document.createElement("div");
+                        cell.className = "cell";
+                        cell.addEventListener("click", () => this.makeMove(row, col));
+                        this.boardElement.appendChild(cell);
+                    }
+                }
+            }
+
+            makeMove(row, col) {
+                if (this.board[row][col] !== " " || this.winner || (currentBoard && (currentBoard.row !== this.boardRow || currentBoard.col !== this.boardCol))) return;
+                this.board[row][col] = currentPlayer;
+                this.updateBoard();
+                if (this.checkWinner(currentPlayer)) {
+                    this.winner = currentPlayer;
+                    this.boardElement.classList.add("winner");
+                    setMessage(`Player ${currentPlayer} wins this board!`);
+                } else if (this.isFull()) {
+                    setMessage("This board is a draw!");
+                }
+                if (!ultimateBoardCheckWinner(currentPlayer)) {
+                    currentBoard = this.isFull() ? null : { row, col };
+                    if (currentBoard && boards[currentBoard.row][currentBoard.col].winner) {
+                        currentBoard = null; // If the targeted board is already won, allow any move
+                    }
+                    switchPlayer();
+                }
+            }
+
+            updateBoard() {
+                const cells = this.boardElement.getElementsByClassName("cell");
+                for (let i = 0; i < cells.length; i++) {
+                    const row = Math.floor(i / 3);
+                    const col = i % 3;
+                    cells[i].textContent = this.board[row][col];
+                    cells[i].classList.toggle("winner", this.board[row][col] === this.winner);
+                }
+            }
+
+            checkWinner(player) {
+                // Check rows, columns, and diagonals
+                return (
+                    this.board.some(row => row.every(spot => spot === player)) ||
+                    [0, 1, 2].some(col => this.board.every(row => row[col] === player)) ||
+                    [0, 1, 2].every(i => this.board[i][i] === player) ||
+                    [0, 1, 2].every(i => this.board[i][2 - i] === player)
+                );
+            }
+
+            isFull() {
+                return this.board.flat().every(spot => spot !== " ");
+            }
+        }
+
+        const gameBoardElement = document.getElementById("game-board");
+        const boards = [];
+        let currentPlayer = "X";
+        let currentBoard = null;
+
+        function setMessage(message) {
+            document.getElementById("message").textContent = message;
+        }
+
+        function switchPlayer() {
+            currentPlayer = currentPlayer === "X" ? "O" : "X";
+            setMessage(`Player ${currentPlayer}'s Turn`);
+        }
+
+        function ultimateBoardCheckWinner(player) {
+            // Check rows
+            if (boards.some(row => row.every(board => board.winner === player))) {
+                setMessage(`Player ${player} wins the entire game!`);
+                return true;
+            }
+            // Check columns
+            for (let col = 0; col < 3; col++) {
+                if (boards.every(row => row[col].winner === player)) {
+                    setMessage(`Player ${player} wins the entire game!`);
+                    return true;
+                }
+            }
+            // Check diagonals
+            if (
+                [0, 1, 2].every(i => boards[i][i].winner === player) ||
+                [0, 1, 2].every(i => boards[i][2 - i].winner === player)
+            ) {
+                setMessage(`Player ${player} wins the entire game!`);
+                return true;
+            }
+            return false;
+        }
+
+        function initGame() {
+            gameBoardElement.innerHTML = "";
+            for (let row = 0; row < 3; row++) {
+                boards[row] = [];
+                for (let col = 0; col < 3; col++) {
+                    const smallBoardElement = document.createElement("div");
+                    gameBoardElement.appendChild(smallBoardElement);
+                    boards[row][col] = new SmallBoard(smallBoardElement, row, col);
+                }
+            }
+        }
+
+        initGame();
+    </script>
+</body>
+</html>
